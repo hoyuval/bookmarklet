@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookmarklet Favicon & HTML Packager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        chrome: {
+                            bar: '#202124',
+                            hover: '#35363a',
+                            border: '#3c4043',
+                            text: '#e8eaed'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom checkerboard for transparent icon preview */
+        .checkerboard {
+            background-color: #1e293b;
+            background-image: 
+                linear-gradient(45deg, #334155 25%, transparent 25%), 
+                linear-gradient(-45deg, #334155 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #334155 75%), 
+                linear-gradient(-45deg, transparent 75%, #334155 75%);
+            background-size: 12px 12px;
+            background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen selection:bg-indigo-500 selection:text-white">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-400/30">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span id="toast-msg" class="text-sm font-medium">Copied to clipboard!</span>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                    100% Client-Side Utility
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">Bookmarklet Favicon Packager</h1>
+                <p class="text-slate-400 text-sm sm:text-base mt-1">
+                    Resize any image to 32×32 Base64 and generate an importable Chrome Bookmarks HTML file.
+                </p>
+            </div>
+            
+            <!-- Live Chrome Bookmarks Bar Preview -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-inner shrink-0">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">Live Chrome Bar Preview</span>
+                <div class="bg-chrome-bar border border-chrome-border rounded-lg px-3 py-1.5 flex items-center gap-2 min-w-[240px]">
+                    <!-- Fake existing bookmark -->
+                    <div class="flex items-center gap-1.5 px-2 py-1 rounded text-chrome-text/50 text-xs select-none">
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                        <span>Tools</span>
+                    </div>
+                    <div class="h-4 w-[1px] bg-chrome-border"></div>
+                    <!-- Active Bookmarklet Preview -->
+                    <div id="bar-preview-pill" class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-chrome-hover text-chrome-text text-xs font-medium transition-all cursor-pointer shadow-sm" title="Your Bookmarklet Preview">
+                        <svg id="bar-preview-placeholder" class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <img id="bar-preview-icon" src="" alt="Favicon" class="w-4 h-4 object-contain shrink-0 hidden">
+                        <span id="bar-preview-title" class="truncate max-w-[130px] hidden"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Inputs (7 cols) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Step 1: Image Upload & Resize -->
+                <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold">1</span>
+                            <h2 class="text-lg font-semibold text-white">Select or Drop Favicon Image</h2>
+                        </div>
+                        <button id="clear-icon-btn" type="button" class="hidden text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800/70 hover:bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg transition items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Clear Icon
+                        </button>
+                    </div>
+
+                    <!-- Drag & Drop Zone -->
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950/50 hover:bg-indigo-950/10 transition-all rounded-xl p-6 text-center cursor-pointer group">
+                        <input type="file" id="file-input" accept="image/*" class="hidden">
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+                            
+                            <!-- Dual Previews (32x32 and 16x16) -->
+                            <div class="flex items-center gap-4 shrink-0 bg-slate-900 p-3 rounded-xl border border-slate-800">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-12 h-12 rounded-lg checkerboard flex items-center justify-center border border-slate-700 shadow-inner relative">
+                                        <canvas id="canvas-32" width="32" height="32" class="w-8 h-8 hidden"></canvas>
+                                        <span id="empty-32-label" class="text-[10px] text-slate-500 font-mono select-none">None</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 mt-1 font-mono">32×32 (Retina)</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-12 h-12 rounded-lg checkerboard flex items-center justify-center border border-slate-700 shadow-inner relative">
+                                        <img id="preview-16" src="" alt="16x16" class="w-4 h-4 hidden">
+                                        <span id="empty-16-label" class="text-[10px] text-slate-500 font-mono select-none">None</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 mt-1 font-mono">16×16 (Actual)</span>
+                                </div>
+                            </div>
+
+                            <!-- Upload Prompt -->
+                            <div class="text-left">
+                                <p class="text-sm font-medium text-slate-200 group-hover:text-indigo-300 transition">
+                                    Click to upload <span class="text-slate-400 font-normal">or drag & drop your image here</span>
+                                </p>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    Tip: You can also press <kbd class="px-1.5 py-0.5 text-[11px] bg-slate-800 border border-slate-700 rounded text-slate-300 font-mono">Ctrl+V</kbd> anywhere on this page to paste a copied image!
+                                </p>
+                                <p class="text-[11px] text-indigo-400/90 mt-2.5 font-medium">
+                                    Automatically scaled &amp; centered to 32×32 px PNG.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 2: Bookmarklet Code & Title -->
+                <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+                    <div class="flex items-center gap-2.5">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold">2</span>
+                        <h2 class="text-lg font-semibold text-white">Bookmarklet Configuration</h2>
+                    </div>
+
+                    <!-- Caption / Title settings -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                        <div>
+                            <label for="bm-title" class="block text-xs font-medium text-slate-300 mb-1.5">
+                                Bookmark Caption (Optional)
+                            </label>
+                            <input type="text" id="bm-title" placeholder="Leave empty for icon-only..." disabled
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                        </div>
+                        <label class="flex items-center gap-2.5 bg-slate-950/80 border border-slate-800/80 px-3.5 py-2.5 rounded-xl cursor-pointer hover:border-slate-700 transition select-none">
+                            <input type="checkbox" id="icon-only-toggle" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700">
+                            <span class="text-xs font-medium text-slate-200">Icon-only mode (Blank caption)</span>
+                        </label>
+                    </div>
+
+                    <!-- JavaScript Code Input -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="bm-code" class="block text-xs font-medium text-slate-300">
+                                JavaScript Code <span class="text-slate-500">(No character limit!)</span>
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <span id="code-stats" class="text-[11px] font-mono text-slate-400">42 chars</span>
+                                <label class="inline-flex items-center gap-1.5 text-xs text-indigo-400 cursor-pointer hover:text-indigo-300">
+                                    <input type="checkbox" id="minify-toggle" checked class="w-3.5 h-3.5 rounded text-indigo-600 bg-slate-900 border-slate-700">
+                                    <span>Clean linebreaks &amp; encode quotes</span>
+                                </label>
+                            </div>
+                        </div>
+                        <textarea id="bm-code" rows="6" spellcheck="false"
+                            placeholder="javascript:(function(){ ... })();"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs sm:text-sm font-mono text-emerald-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition leading-relaxed">javascript:(function(){
+  /* Paste your long bookmarklet script here */
+  const title = document.title;
+  console.log("Bookmarklet executed on: " + title);
+})();</textarea>
+                        <p class="text-[11px] text-slate-400 mt-1.5">
+                            Automatically prepends <code class="text-indigo-300 font-mono">javascript:</code> if missing and safely encodes double-quotes (<code class="text-indigo-300 font-mono">%22</code>) so it never breaks the exported HTML file.
+                        </p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Outputs & Export (5 cols) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Primary Action Card: Export HTML -->
+                <section class="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-slate-950 text-xs font-bold">3</span>
+                        <h2 class="text-lg font-semibold text-white">Download &amp; Import</h2>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-5">
+                        Click below to download a ready-to-import Netscape Bookmark HTML file containing your single bookmarklet and embedded 32×32 Base64 icon.
+                    </p>
+
+                    <button id="download-btn" type="button" class="w-full py-3.5 px-5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-500/40 transition flex items-center justify-center gap-2.5 text-sm group">
+                        <svg class="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span>Download Bookmark HTML File</span>
+                    </button>
+
+                    <!-- Quick Chromebook Instructions -->
+                    <div class="mt-5 pt-4 border-t border-slate-800/80 text-xs text-slate-400 space-y-1.5">
+                        <div class="font-semibold text-slate-200 mb-1">How to import on your Chromebook:</div>
+                        <p>1. Press <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-mono text-[10px]">Ctrl+Shift+O</kbd> to open Bookmark Manager.</p>
+                        <p>2. Click the <strong>⋮</strong> menu (top-right) &rarr; <strong>Import bookmarks</strong>.</p>
+                        <p>3. Select the downloaded <code class="text-indigo-300 font-mono">.html</code> file and drag the new icon from the <em>Imported</em> folder onto your Bookmarks Bar!</p>
+                    </div>
+                </section>
+
+                <!-- Base64 Output Inspection -->
+                <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">Generated Base64 Icon String</h3>
+                            <span id="base64-length" class="text-[11px] text-slate-400 font-mono">No image uploaded yet</span>
+                        </div>
+                        <button id="copy-base64-btn" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copy Base64
+                        </button>
+                    </div>
+                    <input type="text" id="base64-output" readonly placeholder="Upload or paste an image to generate Base64..."
+                        class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-400 placeholder-slate-600 select-all focus:outline-none focus:border-indigo-500">
+                </section>
+
+                <!-- Raw HTML File Preview -->
+                <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">Exported HTML Source Preview</h3>
+                            <span class="text-[11px] text-slate-400">Netscape Bookmark File Format</span>
+                        </div>
+                        <button id="copy-html-btn" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copy HTML
+                        </button>
+                    </div>
+                    <textarea id="html-output" rows="6" readonly
+                        class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-[11px] font-mono text-slate-300 focus:outline-none focus:border-indigo-500 leading-relaxed"></textarea>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const clearIconBtn = document.getElementById('clear-icon-btn');
+        const canvas32 = document.getElementById('canvas-32');
+        const ctx32 = canvas32.getContext('2d');
+        const preview16 = document.getElementById('preview-16');
+        const empty32Label = document.getElementById('empty-32-label');
+        const empty16Label = document.getElementById('empty-16-label');
+        const barPreviewIcon = document.getElementById('bar-preview-icon');
+        const barPreviewPlaceholder = document.getElementById('bar-preview-placeholder');
+        const barPreviewTitle = document.getElementById('bar-preview-title');
+        const bmTitleInput = document.getElementById('bm-title');
+        const iconOnlyToggle = document.getElementById('icon-only-toggle');
+        const bmCodeInput = document.getElementById('bm-code');
+        const minifyToggle = document.getElementById('minify-toggle');
+        const codeStats = document.getElementById('code-stats');
+        const base64Output = document.getElementById('base64-output');
+        const base64Length = document.getElementById('base64-length');
+        const htmlOutput = document.getElementById('html-output');
+        const downloadBtn = document.getElementById('download-btn');
+        const copyBase64Btn = document.getElementById('copy-base64-btn');
+        const copyHtmlBtn = document.getElementById('copy-html-btn');
+
+        let currentImageSource = null;
+        let currentBase64 = '';
+
+        // Show Toast helper
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+
+        // Fallback-safe copy helper for iframes
+        function copyToClipboard(text, label) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast(`${label} copied to clipboard!`);
+            } catch (err) {
+                showToast('Failed to copy.');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Render loaded Image object onto the 32x32 canvas with aspect-ratio preservation
+        function renderImageToCanvas(img) {
+            const dim = 32;
+            canvas32.width = dim;
+            canvas32.height = dim;
+            ctx32.clearRect(0, 0, dim, dim);
+
+            // Calculate proportional scaling (contain)
+            const scale = Math.min(dim / img.width, dim / img.height);
+            const drawWidth = img.width * scale;
+            const drawHeight = img.height * scale;
+            const offsetX = (dim - drawWidth) / 2;
+            const offsetY = (dim - drawHeight) / 2;
+
+            ctx32.imageSmoothingEnabled = true;
+            ctx32.imageSmoothingQuality = 'high';
+            ctx32.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+            currentBase64 = canvas32.toDataURL('image/png');
+            preview16.src = currentBase64;
+            barPreviewIcon.src = currentBase64;
+
+            // Toggle visibility of preview elements
+            canvas32.classList.remove('hidden');
+            preview16.classList.remove('hidden');
+            empty32Label.classList.add('hidden');
+            empty16Label.classList.add('hidden');
+            barPreviewIcon.classList.remove('hidden');
+            barPreviewPlaceholder.classList.add('hidden');
+            clearIconBtn.classList.remove('hidden');
+            clearIconBtn.classList.add('flex');
+
+            base64Output.value = currentBase64;
+            base64Length.textContent = `${dim}×${dim} PNG • ${currentBase64.length.toLocaleString()} chars`;
+
+            updateOutputs();
+        }
+
+        // Clear the currently loaded icon
+        function clearIcon() {
+            currentImageSource = null;
+            currentBase64 = '';
+            fileInput.value = '';
+            ctx32.clearRect(0, 0, canvas32.width, canvas32.height);
+            preview16.src = '';
+            barPreviewIcon.src = '';
+
+            canvas32.classList.add('hidden');
+            preview16.classList.add('hidden');
+            empty32Label.classList.remove('hidden');
+            empty16Label.classList.remove('hidden');
+            barPreviewIcon.classList.add('hidden');
+            barPreviewPlaceholder.classList.remove('hidden');
+            clearIconBtn.classList.add('hidden');
+            clearIconBtn.classList.remove('flex');
+
+            base64Output.value = '';
+            base64Length.textContent = 'No image uploaded yet';
+
+            updateOutputs();
+        }
+
+        // Load image from Data URL or Blob URL
+        function loadImageFromURL(url) {
+            const img = new Image();
+            img.onload = () => {
+                currentImageSource = img;
+                renderImageToCanvas(img);
+            };
+            img.src = url;
+        }
+
+        // Process uploaded or pasted image file
+        function handleImageFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                showToast('Please select a valid image file.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                loadImageFromURL(e.target.result);
+                showToast(`Loaded & resized "${file.name}"`);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Sanitize and format the JavaScript code for an HTML HREF attribute
+        function formatBookmarkletHref(rawCode, shouldClean) {
+            let code = rawCode.trim();
+            if (!code) {
+                code = 'javascript:(function(){})();';
+            }
+            if (!code.toLowerCase().startsWith('javascript:')) {
+                code = 'javascript:' + code;
+            }
+
+            if (shouldClean) {
+                // Remove single-line // comments only if they are on their own line, then collapse newlines
+                code = code
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => !line.startsWith('//'))
+                    .join(' ');
+            }
+
+            // Encode characters that would break an HTML double-quoted HREF="...":
+            // Specifically double quotes (") and literal newlines
+            code = code
+                .replace(/"/g, '%22')
+                .replace(/\r?\n/g, ' ');
+
+            return code;
+        }
+
+        // Escape HTML text for the bookmark title
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Update Live Preview and Netscape Bookmark HTML Output
+        function updateOutputs() {
+            const isIconOnly = iconOnlyToggle.checked;
+            const rawTitle = isIconOnly ? '' : bmTitleInput.value;
+
+            // Update Chrome Bar Top Preview
+            if (isIconOnly || !rawTitle.trim()) {
+                barPreviewTitle.classList.add('hidden');
+                barPreviewTitle.textContent = '';
+            } else {
+                barPreviewTitle.classList.remove('hidden');
+                barPreviewTitle.textContent = rawTitle;
+            }
+
+            const rawCode = bmCodeInput.value;
+            codeStats.textContent = `${rawCode.length.toLocaleString()} chars`;
+
+            const safeHref = formatBookmarkletHref(rawCode, minifyToggle.checked);
+            const safeTitle = escapeHtml(rawTitle);
+            const timestamp = Math.floor(Date.now() / 1000);
+            const iconAttr = currentBase64 ? ` ICON="${currentBase64}"` : '';
+
+            const netscapeHtml = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><A HREF="${safeHref}" ADD_DATE="${timestamp}"${iconAttr}>${safeTitle}</A>
+</DL><p>`;
+
+            htmlOutput.value = netscapeHtml;
+        }
+
+        // Event Listeners: File Upload & Drag-and-Drop
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleImageFile(e.target.files[0]);
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-indigo-500', 'bg-indigo-950/20');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-indigo-500', 'bg-indigo-950/20');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-indigo-500', 'bg-indigo-950/20');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleImageFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Global Paste Listener (Ctrl+V an image anywhere!)
+        window.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (const item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    const blob = item.getAsFile();
+                    handleImageFile(blob);
+                    e.preventDefault();
+                    break;
+                }
+            }
+        });
+
+        // Clear Icon Button
+        clearIconBtn.addEventListener('click', () => {
+            clearIcon();
+            showToast('Cleared icon.');
+        });
+
+        // Title & Icon-only toggle
+        iconOnlyToggle.addEventListener('change', () => {
+            bmTitleInput.disabled = iconOnlyToggle.checked;
+            if (!iconOnlyToggle.checked) {
+                bmTitleInput.focus();
+            }
+            updateOutputs();
+        });
+
+        bmTitleInput.addEventListener('input', updateOutputs);
+        bmCodeInput.addEventListener('input', updateOutputs);
+        minifyToggle.addEventListener('change', updateOutputs);
+
+        // Copy & Download Buttons
+        copyBase64Btn.addEventListener('click', () => {
+            if (!base64Output.value) {
+                showToast('Please upload an image first.');
+                return;
+            }
+            copyToClipboard(base64Output.value, 'Base64 icon string');
+        });
+
+        copyHtmlBtn.addEventListener('click', () => {
+            copyToClipboard(htmlOutput.value, 'Bookmark HTML');
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([htmlOutput.value], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const customName = (!iconOnlyToggle.checked && bmTitleInput.value.trim())
+                ? bmTitleInput.value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '_')
+                : 'icon_bookmarklet';
+            a.href = url;
+            a.download = `${customName}_import.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Downloaded importable HTML file!');
+        });
+
+        // Initialize empty state on load
+        window.onload = () => {
+            updateOutputs();
+        };
+    </script>
+</body>
+</html>
