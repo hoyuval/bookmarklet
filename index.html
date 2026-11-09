@@ -77,13 +77,13 @@
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">Bookmarklet Favicon Packager</h1>
                 <p class="text-slate-400 text-sm sm:text-base mt-1">
-                    Resize any image to 32×32 Base64 and generate an importable Chrome Bookmarks HTML file.
+                    Convert any image to Base64 and package your bookmarklet into an importable HTML file.
                 </p>
             </div>
             
             <!-- Live Chrome Bookmarks Bar Preview -->
             <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-inner shrink-0">
-                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">Live Chrome Bar Preview</span>
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">Live Icon Preview</span>
                 <div class="bg-chrome-bar border border-chrome-border rounded-lg px-3 py-1.5 flex items-center gap-2 min-w-[240px]">
                     <!-- Fake existing bookmark -->
                     <div class="flex items-center gap-1.5 px-2 py-1 rounded text-chrome-text/50 text-xs select-none">
@@ -92,7 +92,7 @@
                     </div>
                     <div class="h-4 w-[1px] bg-chrome-border"></div>
                     <!-- Active Bookmarklet Preview -->
-                    <div id="bar-preview-pill" class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-chrome-hover text-chrome-text text-xs font-medium transition-all cursor-pointer shadow-sm" title="Your Bookmarklet Preview">
+                    <div id="bar-preview-pill" class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-chrome-hover text-chrome-text text-xs font-medium transition-all cursor-pointer shadow-sm">
                         <svg id="bar-preview-placeholder" class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <img id="bar-preview-icon" src="" alt="Favicon" class="w-4 h-4 object-contain shrink-0 hidden">
                         <span id="bar-preview-title" class="truncate max-w-[130px] hidden"></span>
@@ -109,14 +109,14 @@
                 
                 <!-- Step 1: Image Upload & Resize -->
                 <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                         <div class="flex items-center gap-2.5">
                             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold">1</span>
-                            <h2 class="text-lg font-semibold text-white">Select or Drop Favicon Image</h2>
+                            <h2 class="text-lg font-semibold text-white">Upload Favicon Image</h2>
                         </div>
                         <button id="clear-icon-btn" type="button" class="hidden text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800/70 hover:bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg transition items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            Clear Icon
+                            Clear
                         </button>
                     </div>
 
@@ -125,36 +125,49 @@
                         <input type="file" id="file-input" accept="image/*" class="hidden">
                         <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
                             
-                            <!-- Dual Previews (32x32 and 16x16) -->
+                            <!-- 32x32 Icon Preview -->
                             <div class="flex items-center gap-4 shrink-0 bg-slate-900 p-3 rounded-xl border border-slate-800">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-12 h-12 rounded-lg checkerboard flex items-center justify-center border border-slate-700 shadow-inner relative">
-                                        <canvas id="canvas-32" width="32" height="32" class="w-8 h-8 hidden"></canvas>
-                                        <span id="empty-32-label" class="text-[10px] text-slate-500 font-mono select-none">None</span>
+                                    <div class="w-12 h-12 rounded-lg checkerboard flex items-center justify-center border border-slate-700 shadow-inner relative overflow-hidden">
+                                        <canvas id="canvas-32" width="32" height="32" class="w-8 h-8 object-contain hidden"></canvas>
+                                        <span id="empty-32-label" class="text-[10px] text-slate-500 font-mono select-none">32×32</span>
                                     </div>
-                                    <span class="text-[10px] text-slate-400 mt-1 font-mono">32×32 (Retina)</span>
-                                </div>
-                                <div class="flex flex-col items-center">
-                                    <div class="w-12 h-12 rounded-lg checkerboard flex items-center justify-center border border-slate-700 shadow-inner relative">
-                                        <img id="preview-16" src="" alt="16x16" class="w-4 h-4 hidden">
-                                        <span id="empty-16-label" class="text-[10px] text-slate-500 font-mono select-none">None</span>
-                                    </div>
-                                    <span class="text-[10px] text-slate-400 mt-1 font-mono">16×16 (Actual)</span>
+                                    <span class="text-[10px] text-slate-400 mt-1 font-mono">32×32 Icon</span>
                                 </div>
                             </div>
 
                             <!-- Upload Prompt -->
                             <div class="text-left">
                                 <p class="text-sm font-medium text-slate-200 group-hover:text-indigo-300 transition">
-                                    Click to upload <span class="text-slate-400 font-normal">or drag & drop your image here</span>
+                                    Click to upload <span class="text-slate-400 font-normal">or drag &amp; drop your image here</span>
                                 </p>
                                 <p class="text-xs text-slate-400 mt-1">
-                                    Tip: You can also press <kbd class="px-1.5 py-0.5 text-[11px] bg-slate-800 border border-slate-700 rounded text-slate-300 font-mono">Ctrl+V</kbd> anywhere on this page to paste a copied image!
-                                </p>
-                                <p class="text-[11px] text-indigo-400/90 mt-2.5 font-medium">
-                                    Automatically scaled &amp; centered to 32×32 px PNG.
+                                    Tip: Press <kbd class="px-1.5 py-0.5 text-[11px] bg-slate-800 border border-slate-700 rounded text-slate-300 font-mono">Ctrl+V</kbd> anywhere to paste an image!
                                 </p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Icon Processing & Sharpening Controls -->
+                    <div class="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="flex flex-col gap-2">
+                            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" id="auto-trim-toggle" checked class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700">
+                                <span>Auto-Trim Padding / Margins</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" id="ico-container-toggle" checked class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700">
+                                <span>Multi-Res <code class="text-indigo-300 font-mono">.ICO</code> (16×16 + 32×32)</span>
+                            </label>
+                        </div>
+
+                        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl px-3.5 py-2.5 flex flex-col justify-center">
+                            <div class="flex items-center justify-between text-xs mb-1.5">
+                                <label for="sharpen-slider" class="font-medium text-slate-300">Edge Crispness (Unsharp Mask)</label>
+                                <span id="sharpen-val" class="font-mono text-indigo-400 text-[11px]">35%</span>
+                            </div>
+                            <input type="range" id="sharpen-slider" min="0" max="100" value="35"
+                                class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
                         </div>
                     </div>
                 </section>
@@ -183,16 +196,24 @@
 
                     <!-- JavaScript Code Input -->
                     <div>
-                        <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                             <label for="bm-code" class="block text-xs font-medium text-slate-300">
                                 JavaScript Code <span class="text-slate-500">(No character limit!)</span>
                             </label>
-                            <div class="flex items-center gap-3">
-                                <span id="code-stats" class="text-[11px] font-mono text-slate-400">42 chars</span>
-                                <label class="inline-flex items-center gap-1.5 text-xs text-indigo-400 cursor-pointer hover:text-indigo-300">
-                                    <input type="checkbox" id="minify-toggle" checked class="w-3.5 h-3.5 rounded text-indigo-600 bg-slate-900 border-slate-700">
-                                    <span>Clean linebreaks &amp; encode quotes</span>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer select-none">
+                                    <input type="checkbox" id="clean-encode-toggle" checked class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700">
+                                    <span>Clean &amp; HTML-safe encode</span>
                                 </label>
+                                <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer select-none">
+                                    <input type="checkbox" id="b64-wrapper-toggle" class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700">
+                                    <span>Bulletproof Base64 Wrapper</span>
+                                </label>
+                                <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer select-none">
+                                    <input type="checkbox" id="cache-bust-toggle" checked class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700">
+                                    <span>Bust Chrome Icon Cache</span>
+                                </label>
+                                <span id="code-stats" class="text-[11px] font-mono text-slate-400">0 chars</span>
                             </div>
                         </div>
                         <textarea id="bm-code" rows="6" spellcheck="false"
@@ -202,9 +223,6 @@
   const title = document.title;
   console.log("Bookmarklet executed on: " + title);
 })();</textarea>
-                        <p class="text-[11px] text-slate-400 mt-1.5">
-                            Automatically prepends <code class="text-indigo-300 font-mono">javascript:</code> if missing and safely encodes double-quotes (<code class="text-indigo-300 font-mono">%22</code>) so it never breaks the exported HTML file.
-                        </p>
                     </div>
                 </section>
             </div>
@@ -212,30 +230,21 @@
             <!-- Right Column: Outputs & Export (5 cols) -->
             <div class="lg:col-span-5 space-y-6">
                 
-                <!-- Primary Action Card: Export HTML -->
-                <section class="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-                    <div class="flex items-center gap-2.5 mb-3">
-                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-slate-950 text-xs font-bold">3</span>
-                        <h2 class="text-lg font-semibold text-white">Download &amp; Import</h2>
+                <!-- Primary Action Card: Export Bookmark HTML -->
+                <section class="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden space-y-4">
+                    <div class="flex items-center gap-2.5">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500 text-white text-xs font-bold">3</span>
+                        <h2 class="text-lg font-semibold text-white">Export Bookmark HTML</h2>
                     </div>
-                    <p class="text-xs text-slate-300 leading-relaxed mb-5">
-                        Click below to download a ready-to-import Netscape Bookmark HTML file containing your single bookmarklet and embedded 32×32 Base64 icon.
+
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Download the ready-to-import HTML file, then open <code class="text-indigo-300 font-mono">chrome://bookmarks</code> &rarr; <strong>⋮</strong> (top right) &rarr; <strong>Import bookmarks</strong>.
                     </p>
 
-                    <button id="download-btn" type="button" class="w-full py-3.5 px-5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-500/40 transition flex items-center justify-center gap-2.5 text-sm group">
-                        <svg class="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
+                    <button id="download-btn" type="button" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2 text-sm">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         <span>Download Bookmark HTML File</span>
                     </button>
-
-                    <!-- Quick Chromebook Instructions -->
-                    <div class="mt-5 pt-4 border-t border-slate-800/80 text-xs text-slate-400 space-y-1.5">
-                        <div class="font-semibold text-slate-200 mb-1">How to import on your Chromebook:</div>
-                        <p>1. Press <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-mono text-[10px]">Ctrl+Shift+O</kbd> to open Bookmark Manager.</p>
-                        <p>2. Click the <strong>⋮</strong> menu (top-right) &rarr; <strong>Import bookmarks</strong>.</p>
-                        <p>3. Select the downloaded <code class="text-indigo-300 font-mono">.html</code> file and drag the new icon from the <em>Imported</em> folder onto your Bookmarks Bar!</p>
-                    </div>
                 </section>
 
                 <!-- Base64 Output Inspection -->
@@ -281,16 +290,20 @@
         const clearIconBtn = document.getElementById('clear-icon-btn');
         const canvas32 = document.getElementById('canvas-32');
         const ctx32 = canvas32.getContext('2d');
-        const preview16 = document.getElementById('preview-16');
         const empty32Label = document.getElementById('empty-32-label');
-        const empty16Label = document.getElementById('empty-16-label');
         const barPreviewIcon = document.getElementById('bar-preview-icon');
         const barPreviewPlaceholder = document.getElementById('bar-preview-placeholder');
         const barPreviewTitle = document.getElementById('bar-preview-title');
         const bmTitleInput = document.getElementById('bm-title');
         const iconOnlyToggle = document.getElementById('icon-only-toggle');
         const bmCodeInput = document.getElementById('bm-code');
-        const minifyToggle = document.getElementById('minify-toggle');
+        const cleanEncodeToggle = document.getElementById('clean-encode-toggle');
+        const b64WrapperToggle = document.getElementById('b64-wrapper-toggle');
+        const cacheBustToggle = document.getElementById('cache-bust-toggle');
+        const autoTrimToggle = document.getElementById('auto-trim-toggle');
+        const icoContainerToggle = document.getElementById('ico-container-toggle');
+        const sharpenSlider = document.getElementById('sharpen-slider');
+        const sharpenVal = document.getElementById('sharpen-val');
         const codeStats = document.getElementById('code-stats');
         const base64Output = document.getElementById('base64-output');
         const base64Length = document.getElementById('base64-length');
@@ -301,6 +314,7 @@
 
         let currentImageSource = null;
         let currentBase64 = '';
+        let cacheBustToken = Date.now().toString(36);
 
         // Show Toast helper
         function showToast(message) {
@@ -330,41 +344,261 @@
             document.body.removeChild(textarea);
         }
 
-        // Render loaded Image object onto the 32x32 canvas with aspect-ratio preservation
+        // Auto-detect and trim transparent or solid uniform border margins around an image
+        function getTrimmedCanvas(img) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(img, 0, 0);
+
+            if (!autoTrimToggle.checked) {
+                return tempCanvas;
+            }
+
+            const { width, height } = tempCanvas;
+            const imgData = tCtx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+
+            // Sample top-left corner pixel as potential uniform background
+            const bgR = data[0], bgG = data[1], bgB = data[2], bgA = data[3];
+            const isBgPixel = (idx) => {
+                const a = data[idx + 3];
+                if (a < 16) return true;
+                if (bgA > 240) {
+                    const dr = Math.abs(data[idx] - bgR);
+                    const dg = Math.abs(data[idx + 1] - bgG);
+                    const db = Math.abs(data[idx + 2] - bgB);
+                    return (dr + dg + db) < 24;
+                }
+                return false;
+            };
+
+            let top = 0, left = 0, right = width - 1, bottom = height - 1;
+
+            while (top < bottom) {
+                let rowEmpty = true;
+                for (let x = 0; x < width; x++) {
+                    if (!isBgPixel((top * width + x) * 4)) { rowEmpty = false; break; }
+                }
+                if (!rowEmpty) break;
+                top++;
+            }
+            while (bottom > top) {
+                let rowEmpty = true;
+                for (let x = 0; x < width; x++) {
+                    if (!isBgPixel((bottom * width + x) * 4)) { rowEmpty = false; break; }
+                }
+                if (!rowEmpty) break;
+                bottom--;
+            }
+            while (left < right) {
+                let colEmpty = true;
+                for (let y = top; y <= bottom; y++) {
+                    if (!isBgPixel((y * width + left) * 4)) { colEmpty = false; break; }
+                }
+                if (!colEmpty) break;
+                left++;
+            }
+            while (right > left) {
+                let colEmpty = true;
+                for (let y = top; y <= bottom; y++) {
+                    if (!isBgPixel((y * width + right) * 4)) { colEmpty = false; break; }
+                }
+                if (!colEmpty) break;
+                right--;
+            }
+
+            const trimW = Math.max(1, right - left + 1);
+            const trimH = Math.max(1, bottom - top + 1);
+            const out = document.createElement('canvas');
+            out.width = trimW;
+            out.height = trimH;
+            out.getContext('2d').drawImage(tempCanvas, left, top, trimW, trimH, 0, 0, trimW, trimH);
+            return out;
+        }
+
+        // Step-down halving resampler for clean downscaling
+        function stepDownResize(sourceCanvas, targetSize) {
+            let curCanvas = document.createElement('canvas');
+            const scale = Math.min(targetSize / sourceCanvas.width, targetSize / sourceCanvas.height);
+
+            // Fit proportionally onto a square canvas before halving
+            const startSize = Math.max(targetSize, Math.pow(2, Math.ceil(Math.log2(Math.max(sourceCanvas.width, sourceCanvas.height)))));
+            curCanvas.width = startSize;
+            curCanvas.height = startSize;
+            const cCtx = curCanvas.getContext('2d');
+            cCtx.imageSmoothingEnabled = true;
+            cCtx.imageSmoothingQuality = 'high';
+
+            const fitRatio = Math.min(startSize / sourceCanvas.width, startSize / sourceCanvas.height);
+            const drawW = Math.round(sourceCanvas.width * fitRatio);
+            const drawH = Math.round(sourceCanvas.height * fitRatio);
+            cCtx.drawImage(sourceCanvas, Math.floor((startSize - drawW) / 2), Math.floor((startSize - drawH) / 2), drawW, drawH);
+
+            let curSize = startSize;
+            while (curSize / 2 >= targetSize) {
+                const nextSize = Math.max(targetSize, Math.floor(curSize / 2));
+                const nextCanvas = document.createElement('canvas');
+                nextCanvas.width = nextSize;
+                nextCanvas.height = nextSize;
+                const nCtx = nextCanvas.getContext('2d');
+                nCtx.imageSmoothingEnabled = true;
+                nCtx.imageSmoothingQuality = 'high';
+                nCtx.drawImage(curCanvas, 0, 0, nextSize, nextSize);
+                curCanvas = nextCanvas;
+                curSize = nextSize;
+                if (curSize === targetSize) break;
+            }
+
+            if (curSize !== targetSize) {
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = targetSize;
+                finalCanvas.height = targetSize;
+                const fCtx = finalCanvas.getContext('2d');
+                fCtx.imageSmoothingEnabled = true;
+                fCtx.imageSmoothingQuality = 'high';
+                fCtx.drawImage(curCanvas, 0, 0, targetSize, targetSize);
+                curCanvas = finalCanvas;
+            }
+
+            return curCanvas;
+        }
+
+        // Apply 3x3 Unsharp Mask sharpening filter to canvas
+        function applyUnsharpMask(canvas, amountPercent) {
+            if (amountPercent <= 0) return;
+            const strength = (amountPercent / 100) * 0.85;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const srcData = ctx.getImageData(0, 0, w, h);
+            const dstData = ctx.createImageData(w, h);
+            const src = srcData.data;
+            const dst = dstData.data;
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = (y * w + x) * 4;
+                    const a = src[idx + 3];
+                    if (a === 0) {
+                        dst[idx + 3] = 0;
+                        continue;
+                    }
+                    for (let c = 0; c < 3; c++) {
+                        const center = src[idx + c];
+                        const up = src[((Math.max(0, y - 1)) * w + x) * 4 + c];
+                        const down = src[((Math.min(h - 1, y + 1)) * w + x) * 4 + c];
+                        const left = src[(y * w + Math.max(0, x - 1)) * 4 + c];
+                        const right = src[(y * w + Math.min(w - 1, x + 1)) * 4 + c];
+                        const blur = (center * 4 + up + down + left + right) / 8;
+                        const sharpened = center + (center - blur) * (strength * 2.5);
+                        dst[idx + c] = Math.min(255, Math.max(0, Math.round(sharpened)));
+                    }
+                    dst[idx + 3] = a;
+                }
+            }
+            ctx.putImageData(dstData, 0, 0);
+        }
+
+        // Convert DataURL PNG to Uint8Array bytes
+        function dataURLToBytes(dataURL) {
+            const b64 = dataURL.split(',')[1];
+            const bin = atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) {
+                bytes[i] = bin.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // Build a binary Multi-Resolution .ICO file containing both 16x16 and 32x32 PNG frames
+        function createMultiResIcoDataURL(canvas16, canvas32Frame) {
+            const png16 = dataURLToBytes(canvas16.toDataURL('image/png'));
+            const png32 = dataURLToBytes(canvas32Frame.toDataURL('image/png'));
+
+            const headerSize = 6 + (2 * 16);
+            const totalSize = headerSize + png16.length + png32.length;
+            const buf = new ArrayBuffer(totalSize);
+            const view = new DataView(buf);
+            const bytes = new Uint8Array(buf);
+
+            // ICONDIR header (6 bytes)
+            view.setUint16(0, 0, true); // Reserved
+            view.setUint16(2, 1, true); // Type 1 = ICO
+            view.setUint16(4, 2, true); // 2 images (16x16 and 32x32)
+
+            const offset16 = headerSize;
+            const offset32 = headerSize + png16.length;
+
+            // Entry 1: 16x16
+            view.setUint8(6, 16);
+            view.setUint8(7, 16);
+            view.setUint8(8, 0);
+            view.setUint8(9, 0);
+            view.setUint16(10, 1, true);
+            view.setUint16(12, 32, true);
+            view.setUint32(14, png16.length, true);
+            view.setUint32(18, offset16, true);
+
+            // Entry 2: 32x32
+            view.setUint8(22, 32);
+            view.setUint8(23, 32);
+            view.setUint8(24, 0);
+            view.setUint8(25, 0);
+            view.setUint16(26, 1, true);
+            view.setUint16(28, 32, true);
+            view.setUint32(30, png32.length, true);
+            view.setUint32(34, offset32, true);
+
+            bytes.set(png16, offset16);
+            bytes.set(png32, offset32);
+
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return 'data:image/x-icon;base64,' + btoa(binary);
+        }
+
+        // Render loaded Image object with auto-trim, step-down scaling, sharpening, and optional .ICO container
         function renderImageToCanvas(img) {
-            const dim = 32;
-            canvas32.width = dim;
-            canvas32.height = dim;
-            ctx32.clearRect(0, 0, dim, dim);
+            if (!img) return;
+            const sharpenAmount = parseInt(sharpenSlider.value, 10) || 0;
+            const trimmed = getTrimmedCanvas(img);
 
-            // Calculate proportional scaling (contain)
-            const scale = Math.min(dim / img.width, dim / img.height);
-            const drawWidth = img.width * scale;
-            const drawHeight = img.height * scale;
-            const offsetX = (dim - drawWidth) / 2;
-            const offsetY = (dim - drawHeight) / 2;
+            // Generate 32x32 sharpened canvas
+            const scaled32 = stepDownResize(trimmed, 32);
+            applyUnsharpMask(scaled32, sharpenAmount);
 
-            ctx32.imageSmoothingEnabled = true;
-            ctx32.imageSmoothingQuality = 'high';
-            ctx32.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            canvas32.width = 32;
+            canvas32.height = 32;
+            ctx32.clearRect(0, 0, 32, 32);
+            ctx32.drawImage(scaled32, 0, 0);
 
-            currentBase64 = canvas32.toDataURL('image/png');
-            preview16.src = currentBase64;
-            barPreviewIcon.src = currentBase64;
+            // Generate 16x16 sharpened canvas for multi-res ICO
+            const scaled16 = stepDownResize(trimmed, 16);
+            applyUnsharpMask(scaled16, sharpenAmount);
 
-            // Toggle visibility of preview elements
+            const png32DataUrl = canvas32.toDataURL('image/png');
+            if (icoContainerToggle.checked) {
+                currentBase64 = createMultiResIcoDataURL(scaled16, canvas32);
+                base64Length.textContent = `Multi-Res ICO (16+32px) • ${currentBase64.length.toLocaleString()} chars`;
+            } else {
+                currentBase64 = png32DataUrl;
+                base64Length.textContent = `32×32 PNG • ${currentBase64.length.toLocaleString()} chars`;
+            }
+
+            barPreviewIcon.src = png32DataUrl;
+
             canvas32.classList.remove('hidden');
-            preview16.classList.remove('hidden');
             empty32Label.classList.add('hidden');
-            empty16Label.classList.add('hidden');
             barPreviewIcon.classList.remove('hidden');
             barPreviewPlaceholder.classList.add('hidden');
             clearIconBtn.classList.remove('hidden');
             clearIconBtn.classList.add('flex');
 
             base64Output.value = currentBase64;
-            base64Length.textContent = `${dim}×${dim} PNG • ${currentBase64.length.toLocaleString()} chars`;
-
             updateOutputs();
         }
 
@@ -374,13 +608,10 @@
             currentBase64 = '';
             fileInput.value = '';
             ctx32.clearRect(0, 0, canvas32.width, canvas32.height);
-            preview16.src = '';
             barPreviewIcon.src = '';
 
             canvas32.classList.add('hidden');
-            preview16.classList.add('hidden');
             empty32Label.classList.remove('hidden');
-            empty16Label.classList.remove('hidden');
             barPreviewIcon.classList.add('hidden');
             barPreviewPlaceholder.classList.remove('hidden');
             clearIconBtn.classList.add('hidden');
@@ -417,34 +648,62 @@
         }
 
         // Sanitize and format the JavaScript code for an HTML HREF attribute
-        function formatBookmarkletHref(rawCode, shouldClean) {
+        function formatBookmarkletHref(rawCode) {
             let code = rawCode.trim();
             if (!code) {
                 code = 'javascript:(function(){})();';
             }
-            if (!code.toLowerCase().startsWith('javascript:')) {
-                code = 'javascript:' + code;
+
+            if (code.toLowerCase().startsWith('javascript:')) {
+                code = code.slice('javascript:'.length).trim();
             }
 
-            if (shouldClean) {
-                // Remove single-line // comments only if they are on their own line, then collapse newlines
+            // Normalize any existing URL-encoded sequences (%23, %25) first so nothing is double-encoded
+            try {
+                if (/%[0-9A-Fa-f]{2}/.test(code)) {
+                    code = decodeURIComponent(code);
+                }
+            } catch (e) {
+                code = code.replace(/%23/g, '#').replace(/%25/g, '%').replace(/%22/g, '"');
+            }
+
+            // Replace accidental non-breaking spaces from web copy-pasting with normal spaces
+            code = code.replace(/\u00A0/g, ' ');
+
+            // Append invisible cache-buster comment so Chrome doesn't reuse a stale cached favicon for this URL
+            if (cacheBustToggle.checked) {
+                code = `${code}/*cb:${cacheBustToken}*/`;
+            }
+
+            // Optional Bulletproof Base64 Self-Decoding Wrapper
+            if (b64WrapperToggle.checked) {
+                const utf8Bytes = encodeURIComponent(code).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1));
+                const b64Payload = btoa(utf8Bytes);
+                return `javascript:(function(){eval(decodeURIComponent(escape(atob('${b64Payload}'))))})();`;
+            }
+
+            if (cleanEncodeToggle.checked) {
+                // Strip standalone single-line comments and collapse newlines
                 code = code
                     .split('\n')
                     .map(line => line.trim())
                     .filter(line => !line.startsWith('//'))
                     .join(' ');
+
+                // URL-encode characters that Chrome's bookmarklet runner decodes via decodeURIComponent()
+                code = code
+                    .replace(/%/g, '%25')
+                    .replace(/#/g, '%23')
+                    .replace(/"/g, '%22')
+                    .replace(/</g, '%3C')
+                    .replace(/>/g, '%3E')
+                    .replace(/[^\x20-\x7E]/g, (ch) => encodeURIComponent(ch));
             }
 
-            // Encode characters that would break an HTML double-quoted HREF="...":
-            // Specifically double quotes (") and literal newlines
-            code = code
-                .replace(/"/g, '%22')
-                .replace(/\r?\n/g, ' ');
-
-            return code;
+            return 'javascript:' + code;
         }
 
-        // Escape HTML text for the bookmark title
+        // Escape string for safe placement inside an HTML attribute or element
         function escapeHtml(str) {
             return str
                 .replace(/&/g, '&amp;')
@@ -458,7 +717,6 @@
             const isIconOnly = iconOnlyToggle.checked;
             const rawTitle = isIconOnly ? '' : bmTitleInput.value;
 
-            // Update Chrome Bar Top Preview
             if (isIconOnly || !rawTitle.trim()) {
                 barPreviewTitle.classList.add('hidden');
                 barPreviewTitle.textContent = '';
@@ -470,7 +728,8 @@
             const rawCode = bmCodeInput.value;
             codeStats.textContent = `${rawCode.length.toLocaleString()} chars`;
 
-            const safeHref = formatBookmarkletHref(rawCode, minifyToggle.checked);
+            const formattedHref = formatBookmarkletHref(rawCode);
+            const safeHrefAttr = escapeHtml(formattedHref);
             const safeTitle = escapeHtml(rawTitle);
             const timestamp = Math.floor(Date.now() / 1000);
             const iconAttr = currentBase64 ? ` ICON="${currentBase64}"` : '';
@@ -483,7 +742,7 @@
 <TITLE>Bookmarks</TITLE>
 <H1>Bookmarks</H1>
 <DL><p>
-    <DT><A HREF="${safeHref}" ADD_DATE="${timestamp}"${iconAttr}>${safeTitle}</A>
+    <DT><A HREF="${safeHrefAttr}" ADD_DATE="${timestamp}"${iconAttr}>${safeTitle}</A>
 </DL><p>`;
 
             htmlOutput.value = netscapeHtml;
@@ -536,6 +795,28 @@
             showToast('Cleared icon.');
         });
 
+        // Image processing controls (Auto-Trim, Multi-Res ICO, Sharpening Slider)
+        autoTrimToggle.addEventListener('change', () => {
+            if (currentImageSource) renderImageToCanvas(currentImageSource);
+        });
+
+        icoContainerToggle.addEventListener('change', () => {
+            if (currentImageSource) renderImageToCanvas(currentImageSource);
+        });
+
+        sharpenSlider.addEventListener('input', () => {
+            sharpenVal.textContent = `${sharpenSlider.value}%`;
+            if (currentImageSource) renderImageToCanvas(currentImageSource);
+        });
+
+        // Script encoding & cache-busting controls
+        cleanEncodeToggle.addEventListener('change', updateOutputs);
+        b64WrapperToggle.addEventListener('change', updateOutputs);
+        cacheBustToggle.addEventListener('change', () => {
+            cacheBustToken = Date.now().toString(36);
+            updateOutputs();
+        });
+
         // Title & Icon-only toggle
         iconOnlyToggle.addEventListener('change', () => {
             bmTitleInput.disabled = iconOnlyToggle.checked;
@@ -547,7 +828,6 @@
 
         bmTitleInput.addEventListener('input', updateOutputs);
         bmCodeInput.addEventListener('input', updateOutputs);
-        minifyToggle.addEventListener('change', updateOutputs);
 
         // Copy & Download Buttons
         copyBase64Btn.addEventListener('click', () => {
@@ -563,6 +843,10 @@
         });
 
         downloadBtn.addEventListener('click', () => {
+            if (cacheBustToggle.checked) {
+                cacheBustToken = Date.now().toString(36);
+                updateOutputs();
+            }
             const blob = new Blob([htmlOutput.value], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
